@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Post;
+use App\Tag;
 use App\Category;
 use Session;
 
@@ -32,7 +33,8 @@ class PostController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view ('posts.create')->with('categories',$categories);
+        $tags = Tag::all();
+        return view ('posts.create')->with('categories',$categories)->with('tags',$tags);
     }
 
     /**
@@ -43,6 +45,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
+
         $this->validate($request,array(
 
             'title'=>'required|max:255',
@@ -60,6 +63,8 @@ class PostController extends Controller
         $post->body = $request->body;
 
         $post->save();
+
+        $post->tags()->sync($request->tags,false);
 
         Session::flash('success','The post was successfully save!');
 
@@ -93,7 +98,13 @@ class PostController extends Controller
             $cats[$category->id] = $category->name;
         }
 
-        return view('posts.edit')->with('post',$post)->with('categories',$cats);
+        $tags = Tag::all();
+        $tags2 = array();
+        foreach ($tags as $tag) {
+            $tags2[$tag->id] = $tag->name;
+        }
+
+        return view('posts.edit')->with('post',$post)->with('categories',$cats)->with('tags',$tags2);
     }
 
     /**
@@ -133,6 +144,12 @@ class PostController extends Controller
 
         $post->save();
 
+        if (isset($request->tags)) {
+            $post->tags()->sync($request->tags);
+        } else {
+            $post->tags()->sync(array());
+        }
+
         Session::flash('success','The post was successfully Updated!');
 
         return redirect()->route('posts.show', $post->id);
@@ -147,6 +164,7 @@ class PostController extends Controller
     public function destroy($id)
     {
         $post = Post::find($id);
+        $post->tags()->detach();
         $post->delete();
         Session::flash('success','The post was successfully Deleted.');
 

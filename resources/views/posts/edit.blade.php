@@ -2,6 +2,12 @@
 
 @section('title','| Edit Blog Post')
 
+@section('stylesheets')
+
+{!! Html::style('css/select2.min.css') !!}
+
+@endsection
+
 @section('content')
 	
 	<div class="row">
@@ -15,6 +21,9 @@
 
 			{{ Form::label('category_id','Category:') }}
 			{{ Form::select('category_id',$categories,null,['class'=>'form-control']) }}
+
+			{{ Form::label('tags','Tags:') }}
+			{{ Form::select('tags[]',$tags,null,['class'=>' form-control select2-multipe','multiple'=>'multiple']) }}
 
 			{{ Form::label('body','Post Body:') }}
 		    {{ Form::textarea('body',null,array('class'=>'form-control')) }}
@@ -48,5 +57,16 @@
 		</div>
 		{!! Form::close() !!}
 	</div>
+
+@endsection
+
+@section('scripts')
+
+{!! Html::script('js/select2.min.js') !!}
+<script type="text/javascript">
+	$(".select2-multipe").select2();
+	$('.select2-multipe').select2().val({!! json_encode($post->tags()->allRelatedIds()) !!}).trigger('change');
+
+</script>
 
 @endsection
